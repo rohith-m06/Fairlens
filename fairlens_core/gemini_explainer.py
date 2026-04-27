@@ -45,7 +45,7 @@ def configure_gemini(api_key: Optional[str] = None) -> bool:
         >>> configure_gemini()  # Will auto-load from .env file
         True
         
-        >>> configure_gemini('AIzaSyBXcLM01Zhg3UPWVkOjmVW3pAPvZzB8cbE')  # Explicit key
+        >>> configure_gemini('your-api-key-here')  # Explicit key
         True
     """
     if not GEMINI_AVAILABLE:
