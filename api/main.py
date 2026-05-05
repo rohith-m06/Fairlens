@@ -6,9 +6,6 @@ Uses Person 1's fairlens_core modules for bias detection
 from fastapi import FastAPI, UploadFile, File, HTTPException, Body
 from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-import pandas as pd
-
-import numpy as np
 from io import BytesIO, StringIO
 import os
 import sys
@@ -18,33 +15,11 @@ import tempfile
 from pathlib import Path
 from datetime import datetime
 
-# Add parent directory and current directory to path
+
+# Add parent directory to path
 ROOT_DIR = Path(__file__).parent.parent
-sys.path.append(str(ROOT_DIR))
-sys.path.append(str(Path(__file__).parent))
-
-# Import Person 1's fairness modules
-try:
-    from fairlens_core import (
-        generate_scorecard,
-        run_intersectional_audit,
-        explain_demographic_parity_violation,
-        generate_fairness_report,
-    )
-    FAIRLENS_AVAILABLE = True
-except ImportError as e:
-    import traceback
-    IMPORT_ERROR = f"Could not import fairlens_core: {e}\n{traceback.format_exc()}"
-    print(IMPORT_ERROR)
-    FAIRLENS_AVAILABLE = False
-
-# Import visualization and PDF modules
-try:
-    from fairlens_core.visualizations import create_dashboard
-    from fairlens_core.pdf_generator import generate_pdf_report
-    EXTRAS_AVAILABLE = True
-except ImportError as e:
-    EXTRAS_AVAILABLE = False
+if str(ROOT_DIR) not in sys.path:
+    sys.path.append(str(ROOT_DIR))
 
 # Initialize app
 app = FastAPI(
@@ -52,6 +27,7 @@ app = FastAPI(
     description="AI-Powered Bias Detection",
     version="1.0.0"
 )
+
 
 # Enable CORS
 app.add_middleware(
@@ -90,6 +66,7 @@ async def diag():
 @app.get("/api/audit/demo")
 async def demo_audit():
     """Run audit on demo dataset"""
+    import pandas as pd
     try:
         # Find demo data
         paths = ["data/demo_loans.csv", "../data/demo_loans.csv", "demo_loans.csv"]
@@ -112,6 +89,7 @@ async def demo_audit():
 @app.post("/api/audit/upload")
 async def upload_audit(file: UploadFile = File(...)):
     """Upload and analyze CSV file"""
+    import pandas as pd
     try:
         if not file.filename.endswith('.csv'):
             raise HTTPException(status_code=400, detail="CSV file required")
@@ -131,8 +109,10 @@ async def upload_audit(file: UploadFile = File(...)):
         print(error_msg)
         raise HTTPException(status_code=500, detail=error_msg)
 
-def analyze_dataframe(df: pd.DataFrame) -> dict:
+def analyze_dataframe(df) -> dict:
     """Run fairness audit on dataframe"""
+    import pandas as pd
+    import numpy as np
     
     # Auto-detect columns (improved with more common names)
     pred_keywords = ['predict', 'pred', 'score', 'probability', 'prob', 'output']
@@ -179,10 +159,13 @@ def analyze_dataframe(df: pd.DataFrame) -> dict:
     metrics = {}
     violations = []
     
-    if not FAIRLENS_AVAILABLE:
-        raise HTTPException(status_code=500, detail=f"FairLens core modules not loaded. Error: {IMPORT_ERROR}")
-    
+    # Import Person 1's fairness modules
     try:
+        from fairlens_core import (
+            generate_scorecard,
+            explain_demographic_parity_violation,
+        )
+        
         scorecard = generate_scorecard(
             df,
             sensitive_attrs=attrs,
@@ -210,10 +193,11 @@ def analyze_dataframe(df: pd.DataFrame) -> dict:
                             )
                         })
     except Exception as e:
-        print(f"Scorecard error: {e}")
         import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+        error_msg = f"Analysis failed: {str(e)}\n{traceback.format_exc()}"
+        print(error_msg)
+        raise HTTPException(status_code=500, detail=error_msg)
+
     
     # Risk level
     max_m = max(metrics.values()) if metrics else 0
@@ -235,8 +219,7 @@ def analyze_dataframe(df: pd.DataFrame) -> dict:
 async def export_pdf(audit_data: dict = Body(...)):
     """Generate PDF report from audit results"""
     try:
-        if not EXTRAS_AVAILABLE:
-            raise HTTPException(status_code=503, detail="PDF generation unavailable")
+        from fairlens_core.pdf_generator import generate_pdf_report
         
         # Create temp file
         with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
@@ -335,11 +318,7 @@ async def export_json(audit_data: dict = Body(...)):
 async def get_visualizations(audit_data: dict = Body(...)):
     """Generate visualization charts for audit results"""
     try:
-        if not EXTRAS_AVAILABLE:
-            return {
-                "status": "unavailable",
-                "message": "Visualizations not available"
-            }
+        from fairlens_core.visualizations import create_dashboard
         
         dashboard = create_dashboard(audit_data)
         return {
