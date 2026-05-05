@@ -83,6 +83,20 @@ async def health():
     """Health check"""
     return {"status": "healthy", "service": "FairLens"}
 
+@app.get("/api/diag")
+async def diag():
+    """Diagnostic info"""
+    import os
+    import sys
+    return {
+        "cwd": os.getcwd(),
+        "files_root": os.listdir("."),
+        "files_api": os.listdir("api") if os.path.exists("api") else "missing",
+        "files_data": os.listdir("data") if os.path.exists("data") else "missing",
+        "sys_path": sys.path,
+        "env": {k: "set" for k in os.environ.keys() if "KEY" in k or "SECRET" in k}
+    }
+
 @app.get("/api/audit/demo")
 async def demo_audit():
     """Run audit on demo dataset"""
