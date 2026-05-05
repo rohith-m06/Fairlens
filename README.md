@@ -60,7 +60,7 @@ Detect & fix algorithmic bias before it harms people. FairLens audits loan appro
 ## 🚀 Live Demo
 
 The project is deployed on Vercel and can be accessed at:
-**[FairLens Web Dashboard](https://fairlens-ck  atbrhzy-mrohith676-9400s-projects.vercel.app)**
+**[FairLens Web Dashboard](https://fairlens-ckatbrhzy-mrohith676-9400s-projects.vercel.app)**
 
 ---
 
