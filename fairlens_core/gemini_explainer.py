@@ -6,7 +6,7 @@ recommendations. Integrates seamlessly with scorecard, intersectional, and
 counterfactual modules.
 
 Requires: GOOGLE_API_KEY environment variable (loaded from .env file)
-Install: pip install google-generativeai python-dotenv
+Install: pip install google-genai python-dotenv
 """
 
 from typing import Any, Dict, List, Optional
@@ -20,7 +20,7 @@ except ImportError:
     pass  # python-dotenv not installed, will fall back to environment vars
 
 try:
-    import google.generativeai as genai
+    import google.genai as genai
     GEMINI_AVAILABLE = True
 except ImportError:
     GEMINI_AVAILABLE = False
@@ -49,7 +49,7 @@ def configure_gemini(api_key: Optional[str] = None) -> bool:
         True
     """
     if not GEMINI_AVAILABLE:
-        print("⚠️  google-generativeai not installed.")
+        print("⚠️  google-genai not installed.")
         print("   Install with: pip install -r requirements.txt")
         return False
     

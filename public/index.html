@@ -774,7 +774,7 @@
                     <!-- Page Title -->
                     <div class="page-title">
                         <div class="title-section">
-                            <h1>Bias Detection Audit</h1>
+                            <h1>FairLens-Bias Detection Audit</h1>
                             <p>AI-powered fairness analysis for your datasets</p>
                         </div>
                     </div>
@@ -895,7 +895,7 @@
         const loading = document.getElementById('loading');
         const errorMessage = document.getElementById('errorMessage');
         const fileName = document.getElementById('fileName');
-        const API_URL = window.location.origin + '/api';
+        const API_URL = 'http://127.0.0.1:8000/api';
         
         // Store last audit data for exports
         let lastAuditData = null;

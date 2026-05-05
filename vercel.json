@@ -1,8 +1,13 @@
 {
+  "name": "FairLens",
+  "buildCommand": "echo 'Build complete'",
+  "public": true,
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "/api/main.py"
     }
-  ]
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false
 }

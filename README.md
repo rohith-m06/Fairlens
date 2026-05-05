@@ -93,13 +93,28 @@ pip install -r requirements.txt
 
 ### 4. Run the Project
 
-#### Option A: Run the Web Dashboard (FastAPI + HTML)
-This is the same version as the Vercel deployment.
+#### Option A: Run the Web Dashboard (FastAPI + HTML) - **RECOMMENDED**
+This is the same version as the Vercel deployment. Best for interactive analysis.
+
+**Terminal 1 - Start Backend API:**
 ```bash
-# Start the FastAPI server
-uvicorn api.main:app --reload
+cd api
+python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
-Once started, open your browser at **http://localhost:8000**.
+
+**Terminal 2 - Start Frontend Server:**
+```bash
+cd public
+python -m http.server 3000
+```
+
+Then open your browser at **http://127.0.0.1:3000**
+
+The frontend will:
+- Display the FairLens bias detection dashboard
+- Allow you to upload CSV files or use demo data
+- Show fairness metrics and visualizations
+- Enable PDF report downloads
 
 #### Option B: Run the Streamlit UI
 This is the original hackathon frontend with more granular controls.
@@ -107,7 +122,21 @@ This is the original hackathon frontend with more granular controls.
 streamlit run streamlit_app/app.py
 ```
 
-### 5. Generate Demo Data (Optional)
+### 5. Using the Application
+
+**On the Dashboard:**
+1. Click **"Use Demo Data"** to analyze the sample loan dataset
+2. Or upload your own CSV file with columns: `age`, `gender`, `race`, `credit_score`, `years_employed`, `loan_amount_requested`, `loan_approved`
+3. View fairness metrics for each demographic group
+4. Download PDF reports for stakeholder sharing
+
+**Fairness Metrics Explained:**
+- **Demographic Parity**: Do all groups get approved at similar rates?
+- **Equalized Odds**: Do false positive/negative rates match across groups?
+- **Predictive Parity**: Is prediction accuracy equal across groups?
+- **Individual Fairness**: Are similar individuals treated similarly?
+
+### 6. Generate Demo Data (Optional)
 If you need fresh data for testing:
 ```bash
 python data/generate_demo_data.py
