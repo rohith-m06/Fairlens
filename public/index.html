@@ -948,14 +948,15 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Error: ${response.statusText}`);
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.detail || response.statusText || `Server error (${response.status})`);
                 }
 
                 const data = await response.json();
                 displayResults(data);
             } catch (error) {
-                console.error('Error:', error);
-                showError('Failed to analyze file: ' + error.message);
+                console.error('Analysis Error:', error);
+                showError('Failed to analyze: ' + error.message);
             } finally {
                 showLoading(false);
             }
@@ -970,13 +971,14 @@
                 const response = await fetch(`${API_URL}/audit/demo`);
                 
                 if (!response.ok) {
-                    throw new Error(`Error: ${response.statusText}`);
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.detail || response.statusText || `Server error (${response.status})`);
                 }
 
                 const data = await response.json();
                 displayResults(data);
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Demo Load Error:', error);
                 showError('Failed to load demo data: ' + error.message);
             } finally {
                 showLoading(false);
