@@ -18,8 +18,10 @@ import tempfile
 from pathlib import Path
 from datetime import datetime
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add parent directory and current directory to path
+ROOT_DIR = Path(__file__).parent.parent
+sys.path.append(str(ROOT_DIR))
+sys.path.append(str(Path(__file__).parent))
 
 # Import Person 1's fairness modules
 try:
@@ -31,7 +33,9 @@ try:
     )
     FAIRLENS_AVAILABLE = True
 except ImportError as e:
-    print(f"Warning: Could not import fairlens_core: {e}")
+    import traceback
+    IMPORT_ERROR = f"Could not import fairlens_core: {e}\n{traceback.format_exc()}"
+    print(IMPORT_ERROR)
     FAIRLENS_AVAILABLE = False
 
 # Import visualization and PDF modules
@@ -40,7 +44,6 @@ try:
     from fairlens_core.pdf_generator import generate_pdf_report
     EXTRAS_AVAILABLE = True
 except ImportError as e:
-    print(f"Warning: Could not import extras: {e}")
     EXTRAS_AVAILABLE = False
 
 # Initialize app
@@ -97,7 +100,10 @@ async def demo_audit():
         
         return analyze_dataframe(df)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        import traceback
+        error_msg = f"{str(e)}\n{traceback.format_exc()}"
+        print(error_msg)
+        raise HTTPException(status_code=500, detail=error_msg)
 
 @app.post("/api/audit/upload")
 async def upload_audit(file: UploadFile = File(...)):
@@ -116,7 +122,10 @@ async def upload_audit(file: UploadFile = File(...)):
     except pd.errors.ParserError:
         raise HTTPException(status_code=400, detail="Invalid CSV")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+        error_msg = f"{str(e)}\n{traceback.format_exc()}"
+        print(error_msg)
+        raise HTTPException(status_code=500, detail=error_msg)
 
 def analyze_dataframe(df: pd.DataFrame) -> dict:
     """Run fairness audit on dataframe"""
@@ -167,7 +176,7 @@ def analyze_dataframe(df: pd.DataFrame) -> dict:
     violations = []
     
     if not FAIRLENS_AVAILABLE:
-        raise HTTPException(status_code=500, detail="FairLens core modules not loaded. Check server logs.")
+        raise HTTPException(status_code=500, detail=f"FairLens core modules not loaded. Error: {IMPORT_ERROR}")
     
     try:
         scorecard = generate_scorecard(
