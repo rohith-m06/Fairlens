@@ -6,8 +6,8 @@ Uses Person 1's fairlens_core modules for bias detection
 from fastapi import FastAPI, UploadFile, File, HTTPException, Body
 from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 import pandas as pd
+
 import numpy as np
 from io import BytesIO, StringIO
 import os
@@ -62,21 +62,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve static files
-public_dir = Path(__file__).parent.parent / "public"
-if public_dir.exists():
-    try:
-        app.mount("/static", StaticFiles(directory=str(public_dir)), name="static")
-    except:
-        pass
-
 @app.get("/")
 async def root():
-    """Serve homepage"""
-    index = public_dir / "index.html"
-    if index.exists():
-        return FileResponse(str(index), media_type="text/html")
+    """Root endpoint"""
     return {"status": "FairLens API running"}
+
 
 @app.get("/api/health")
 async def health():
