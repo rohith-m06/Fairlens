@@ -369,24 +369,31 @@ async def create_visualizations(data: Dict[str, Any]):
         metrics = data.get("metrics", {})
         
         charts = {}
+        errors = {}
         
         # Disparity chart
         try:
             charts["disparity_chart"] = visualizations.create_disparity_chart(metrics)
         except Exception as e:
-            print(f"Disparity chart error: {e}")
+            error_msg = str(e)
+            print(f"Disparity chart error: {error_msg}")
+            errors["disparity_chart"] = error_msg
         
         # Risk gauge
         try:
             charts["risk_gauge"] = visualizations.create_risk_gauge(data.get("risk_level", "LOW"))
         except Exception as e:
-            print(f"Risk gauge error: {e}")
+            error_msg = str(e)
+            print(f"Risk gauge error: {error_msg}")
+            errors["risk_gauge"] = error_msg
         
         # Comparison chart
         try:
             charts["comparison_chart"] = visualizations.create_metric_comparison_chart(metrics)
         except Exception as e:
-            print(f"Comparison chart error: {e}")
+            error_msg = str(e)
+            print(f"Comparison chart error: {error_msg}")
+            errors["comparison_chart"] = error_msg
         
         # Violation chart
         violations = data.get("violations", [])
@@ -394,13 +401,17 @@ async def create_visualizations(data: Dict[str, Any]):
             try:
                 charts["violation_chart"] = visualizations.create_violation_distribution(violations)
             except Exception as e:
-                print(f"Violation chart error: {e}")
+                error_msg = str(e)
+                print(f"Violation chart error: {error_msg}")
+                errors["violation_chart"] = error_msg
         
         return {
             "status": "success",
-            "charts": charts
+            "charts": charts,
+            "errors": errors if errors else None
         }
         
     except Exception as e:
-        print(f"Visualization error: {e}")
-        return {"status": "error", "message": str(e)}
+        error_msg = str(e)
+        print(f"Visualization error: {error_msg}")
+        return {"status": "error", "message": error_msg, "charts": {}}
