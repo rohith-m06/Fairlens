@@ -43,25 +43,64 @@ def load_demo_data():
 def run_fairness_audit(df: pd.DataFrame) -> Dict[str, Any]:
     """Run complete fairness audit on a dataset"""
     
-    # Map actual column names to standard names
-    column_mapping = {
-        "loan_amount_requested": "loan_amount",
+    # Normalize column names to lowercase and handle common variations
+    df = df.copy()
+    df.columns = df.columns.str.lower().str.strip()
+    
+    # Create a flexible column mapping for common variations
+    column_replacements = {
+        "loan_amount_requested": "approval_decision",
+        "loan_request_amount": "approval_decision",
         "years_employed": "employment_years",
-        "loan_approved": "approval_decision"
+        "employment_years": "employment_years",
+        "loan_approved": "approval_decision",
+        "approval": "approval_decision",
+        "approved": "approval_decision",
+        "decision": "approval_decision",
     }
     
-    # Rename columns if they exist
+    # Map columns intelligently - handle case insensitivity
     df_renamed = df.copy()
-    for old_col, new_col in column_mapping.items():
-        if old_col in df_renamed.columns and new_col not in df_renamed.columns:
-            df_renamed[new_col] = df_renamed[old_col]
     
-    # Check for required columns
+    # Try to find and map approval/decision column
+    approval_cols = ["loan_approved", "approval", "approved", "decision", "loan_approval", "approval_decision"]
+    for col in df_renamed.columns:
+        col_lower = col.lower()
+        if col_lower in approval_cols:
+            df_renamed["approval_decision"] = df_renamed[col]
+            break
+    
+    # Try to find employment years column
+    employment_cols = ["years_employed", "employment_years", "years_employment", "tenure"]
+    for col in df_renamed.columns:
+        col_lower = col.lower()
+        if col_lower in employment_cols:
+            df_renamed["employment_years"] = df_renamed[col]
+            break
+    
+    # Try to find loan amount column  
+    loan_cols = ["loan_amount_requested", "loan_amount", "loan_request", "requested_amount"]
+    for col in df_renamed.columns:
+        col_lower = col.lower()
+        if col_lower in loan_cols:
+            df_renamed["loan_amount"] = df_renamed[col]
+            break
+    
+    # Check for required columns (case-insensitive)
     required_cols = ["credit_score", "age", "gender", "race", "approval_decision"]
     
     for col in required_cols:
-        if col not in df_renamed.columns:
-            raise ValueError(f"Missing required column: {col}")
+        col_found = False
+        for df_col in df_renamed.columns:
+            if df_col.lower() == col.lower():
+                if df_col != col:
+                    df_renamed[col] = df_renamed[df_col]
+                col_found = True
+                break
+        
+        if not col_found:
+            available_cols = ", ".join(df.columns.tolist())
+            raise ValueError(f"Missing required column: '{col}'. Available columns: {available_cols}")
     
     # Prepare data
     y_true = df_renamed["approval_decision"].values.astype(int)
@@ -190,14 +229,21 @@ async def upload_file(file: UploadFile = File(...)):
         contents = await file.read()
         df = pd.read_csv(io.BytesIO(contents))
         
+        if df.empty:
+            raise ValueError("CSV file is empty")
+        
         # Run audit
         results = run_fairness_audit(df)
         return results
         
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=f"Data validation error: {str(e)}")
+        error_msg = str(e)
+        print(f"Validation error: {error_msg}")
+        raise HTTPException(status_code=400, detail=f"Data validation error: {error_msg}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error analyzing file: {str(e)}")
+        error_msg = str(e)
+        print(f"File analysis error: {error_msg}")
+        raise HTTPException(status_code=500, detail=f"Error analyzing file: {error_msg}")
 
 
 @app.get("/api/audit/demo")
