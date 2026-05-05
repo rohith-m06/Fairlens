@@ -57,20 +57,65 @@ Detect & fix algorithmic bias before it harms people. FairLens audits loan appro
 - **Reporting**: fpdf2
 - **Data**: Synthetic CSV (loan approval dataset with intentional bias)
 
-## 🚀 Quick Start
+## 🚀 Live Demo
 
+The project is deployed on Vercel and can be accessed at:
+**[FairLens Web Dashboard](https://fairlens-ck  atbrhzy-mrohith676-9400s-projects.vercel.app)**
+
+---
+
+## 💻 Local Development & Setup
+
+Follow these steps to run FairLens on your local machine.
+
+### 1. Clone the Repository
 ```bash
-# 1. Install dependencies
-pip install -r requirements.txt
-
-# 2. Run Streamlit UI
-streamlit run streamlit_app/app.py
-
-# 3. Or run FastAPI backend
-uvicorn api.main:app --reload
+git clone https://github.com/rohith-m06/Fairlens.git
+cd Fairlens
 ```
 
-## 📊 Demo Scenario
+### 2. Set Up Environment Variables
+Create a `.env` file in the root directory and add your Google API Key (needed for AI-powered insights):
+```bash
+GOOGLE_API_KEY=your_gemini_api_key_here
+```
+
+### 3. Install Dependencies
+It is recommended to use a virtual environment:
+```bash
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install required packages
+pip install -r requirements.txt
+```
+
+### 4. Run the Project
+
+#### Option A: Run the Web Dashboard (FastAPI + HTML)
+This is the same version as the Vercel deployment.
+```bash
+# Start the FastAPI server
+uvicorn api.main:app --reload
+```
+Once started, open your browser at **http://localhost:8000**.
+
+#### Option B: Run the Streamlit UI
+This is the original hackathon frontend with more granular controls.
+```bash
+streamlit run streamlit_app/app.py
+```
+
+### 5. Generate Demo Data (Optional)
+If you need fresh data for testing:
+```bash
+python data/generate_demo_data.py
+```
+
+---
+
+## 🏗️ Five-Layer Architecture
 
 **Bank's Loan Approval Model**
 - **Surface Accuracy**: 85% overall

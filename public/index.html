@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FairLens - Bias Detection Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4a4a4a;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5a5a5a;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #1a1a1a;
+            color: #9ca3af;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .main-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 224px;
+            background: #222222;
+            border-right: 1px solid #2a2a2a;
+            padding: 24px 16px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .sidebar.visible {
+            display: block;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+            padding: 12px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #e8822a 0%, #f5a858 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #1a1a1a;
+            font-size: 18px;
+        }
+
+        .logo-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .sidebar-section {
+            margin-bottom: 24px;
+        }
+
+        .sidebar-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #666666;
+            letter-spacing: 0.1em;
+            margin-bottom: 12px;
+            padding: 0 8px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: 36px;
+            padding: 0 10px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            color: #9ca3af;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 200ms ease-in-out;
+            cursor: pointer;
+        }
+
+        .sidebar-link:hover {
+            background: #2a2a2a;
+            color: #e8822a;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header */
+        .top-header {
+            height: 56px;
+            background: #222222;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            gap: 16px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+
+        .breadcrumb {
+            font-size: 14px;
+            color: #9ca3af;
+        }
+
+        .breadcrumb-highlight {
+            color: #e8822a;
+        }
+
+        .header-search {
+            width: 224px;
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #9ca3af;
+            font-size: 13px;
+        }
+
+        .header-search::placeholder {
+            color: #666666;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-icon {
+            width: 32px;
+            height: 32px;
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #9ca3af;
+            transition: all 200ms ease-in-out;
+        }
+
+        .header-icon:hover {
+            background: #3a3a3a;
+            color: #e8822a;
+        }
+
+        .header-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e8822a 0%, #f5a858 100%);
+            border: 2px solid #e8822a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1a1a1a;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        /* Page Container */
+        .page-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Page Title */
+        .page-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            gap: 16px;
+        }
+
+        .title-section h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .title-section p {
+            font-size: 13px;
+            color: #9ca3af;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: #222222;
+            border: 2px dashed #e8822a;
+            border-radius: 12px;
+            padding: 48px;
+            text-align: center;
+            margin-bottom: 32px;
+            transition: all 200ms ease-in-out;
+            cursor: pointer;
+        }
+
+        .upload-section:hover {
+            border-color: #f5a858;
+            background: #2a2a2a;
+        }
+
+        .upload-section.dragover {
+            border-color: #f5a858;
+            background: #2a2a2a;
+            box-shadow: 0 0 0 3px rgba(232, 130, 42, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .upload-subtext {
+            color: #9ca3af;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .file-input-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #e8822a;
+            color: #1a1a1a;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 200ms ease-in-out;
+            border: none;
+        }
+
+        .file-input-label:hover {
+            background: #f5a858;
+            transform: translateY(-2px);
+        }
+
+        .file-input-label:active {
+            transform: translateY(0);
+        }
+
+        .demo-button {
+            background: #2a2a2a;
+            color: #e8822a;
+            border: 1px solid #e8822a;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 200ms ease-in-out;
+        }
+
+        .demo-button:hover {
+            background: #e8822a;
+            color: #1a1a1a;
+        }
+
+        .file-name {
+            color: #9ca3af;
+            font-size: 12px;
+            margin-top: 12px;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 32px;
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #2a2a2a;
+            border-top: 3px solid #e8822a;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error Message */
+        .error-message {
+            background: rgba(248, 81, 81, 0.1);
+            border: 1px solid #f87171;
+            color: #fca5a5;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: none;
+            font-size: 14px;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* Results Section */
+        .results-section {
+            display: none;
+        }
+
+        .results-section.show {
+            display: block;
+        }
+
+        /* Metric Grid */
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .info-box {
+            background: #222222;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .info-box-label {
+            color: #666666;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 12px;
+        }
+
+        .info-box-value {
+            color: #e8822a;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        /* Details Section */
+        .details-section {
+            background: #222222;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .details-header {
+            font-weight: 700;
+            color: #ffffff;
+            font-size: 14px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .metric-card {
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            border-left: 3px solid #e8822a;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+        }
+
+        .metric-label {
+            color: #666666;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            color: #e8822a;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .metric-card.danger {
+            border-left-color: #f87171;
+        }
+
+        .metric-card.danger .metric-value {
+            color: #f87171;
+        }
+
+        .metric-card.warning {
+            border-left-color: #fbbf24;
+        }
+
+        .metric-card.warning .metric-value {
+            color: #fbbf24;
+        }
+
+        .metric-card.success {
+            border-left-color: #4ade80;
+        }
+
+        .metric-card.success .metric-value {
+            color: #4ade80;
+        }
+
+        /* Risk Badge */
+        .risk-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+            margin: 16px 0;
+        }
+
+        .risk-badge.high {
+            background: rgba(248, 81, 81, 0.1);
+            color: #fca5a5;
+            border: 1px solid #f87171;
+        }
+
+        .risk-badge.medium {
+            background: rgba(251, 191, 36, 0.1);
+            color: #fde047;
+            border: 1px solid #fbbf24;
+        }
+
+        .risk-badge.low {
+            background: rgba(74, 222, 128, 0.1);
+            color: #86efac;
+            border: 1px solid #4ade80;
+        }
+
+        /* Violation Card */
+        .violation-card {
+            background: rgba(248, 81, 81, 0.05);
+            border: 1px solid rgba(248, 113, 113, 0.3);
+            border-left: 3px solid #f87171;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+        }
+
+        .violation-title {
+            font-weight: 600;
+            color: #fca5a5;
+            margin-bottom: 8px;
+        }
+
+        .violation-text {
+            color: #9ca3af;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* Detail Item */
+        .detail-item {
+            padding: 12px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 3px solid #e8822a;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #e8822a;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .detail-value {
+            color: #9ca3af;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* Metric Explanation */
+        .metric-explanation {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid #3b82f6;
+            padding: 12px;
+            margin: 12px 0;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #93c5fd;
+        }
+
+        /* Expandable */
+        .expandable {
+            cursor: pointer;
+            padding: 12px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            margin: 10px 0;
+            user-select: none;
+            border-left: 3px solid #e8822a;
+            transition: all 200ms ease-in-out;
+        }
+
+        .expandable:hover {
+            background: #3a3a3a;
+            border-left-color: #f5a858;
+        }
+
+        .expandable-content {
+            display: none;
+            padding: 12px;
+            background: #1a1a1a;
+            margin-top: 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #9ca3af;
+        }
+
+        .expandable-content.show {
+            display: block;
+        }
+
+        .expandable-arrow {
+            display: inline-block;
+            margin-right: 8px;
+            transition: transform 200ms ease-in-out;
+        }
+
+        .expandable.open .expandable-arrow {
+            transform: rotate(90deg);
+        }
+
+        /* Export Buttons */
+        .export-section {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .export-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 200ms ease-in-out;
+            background: #2a2a2a;
+            color: #e8822a;
+        }
+
+        .export-button:hover {
+            background: #e8822a;
+            color: #1a1a1a;
+            border-color: #e8822a;
+            transform: translateY(-2px);
+        }
+
+        .export-button:active {
+            transform: translateY(0);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            background: #222222;
+            border-radius: 12px;
+            border: 1px solid #2a2a2a;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .chart-title {
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .visualizations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 24px;
+            margin: 24px 0;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 24px;
+            border-top: 1px solid #2a2a2a;
+            color: #666666;
+            font-size: 12px;
+            margin-top: 32px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main-content {
+                width: 100%;
+            }
+
+            .page-container {
+                padding: 16px;
+            }
+
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .visualizations-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .title-section h1 {
+                font-size: 20px;
+            }
+
+            .export-section {
+                flex-direction: column;
+            }
+
+            .export-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-wrapper">
+        <!-- Sidebar (Hidden on mobile, can be toggled) -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <div class="logo-icon">FL</div>
+                <div class="logo-text">FairLens</div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-label">Main Menu</div>
+                <div class="sidebar-link">📊 Dashboard</div>
+                <div class="sidebar-link">📈 Analytics</div>
+                <div class="sidebar-link">🔍 Audit History</div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-label">Analysis</div>
+                <div class="sidebar-link">⚙️ Configuration</div>
+                <div class="sidebar-link">📋 Reports</div>
+                <div class="sidebar-link">🎯 Metrics</div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-label">Visualization</div>
+                <div class="sidebar-link">📊 Charts</div>
+                <div class="sidebar-link">📉 Trends</div>
+                <div class="sidebar-link">🎨 Themes</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Header -->
+            <div class="top-header">
+                <div class="header-left">
+                    <div class="breadcrumb">
+                        <span>Dashboard</span>
+                        <span class="breadcrumb-highlight"> › Overview</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <input type="text" class="header-search" placeholder="Search..." />
+                    <div class="header-icon" title="Notifications">🔔</div>
+                    <div class="header-icon" title="Settings">⚙️</div>
+                    <div class="header-avatar">FL</div>
+                </div>
+            </div>
+
+            <!-- Page Container -->
+            <div class="page-container">
+                <div class="container">
+                    <!-- Page Title -->
+                    <div class="page-title">
+                        <div class="title-section">
+                            <h1>Bias Detection Audit</h1>
+                            <p>AI-powered fairness analysis for your datasets</p>
+                        </div>
+                    </div>
+
+                    <!-- Upload Section -->
+                    <div class="upload-section" id="uploadSection">
+                        <div class="upload-icon">📊</div>
+                        <div class="upload-text">Upload Your Dataset</div>
+                        <div class="upload-subtext">Drag and drop a CSV file to analyze</div>
+                        <input type="file" id="fileInput" accept=".csv" />
+                        <div class="upload-buttons">
+                            <label for="fileInput" class="file-input-label">
+                                📁 Choose CSV File
+                            </label>
+                            <button class="demo-button" onclick="loadDemoData()">📈 Use Demo Data</button>
+                        </div>
+                        <div class="file-name" id="fileName"></div>
+                    </div>
+
+                    <!-- Error Message -->
+                    <div class="error-message" id="errorMessage"></div>
+
+                    <!-- Loading -->
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                        <div style="color: #9ca3af;">Analyzing fairness metrics...</div>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div class="results-section" id="resultsSection">
+                        <!-- Dataset Metrics Grid -->
+                        <div class="metric-grid" id="datasetInfo"></div>
+
+                        <!-- Risk Assessment -->
+                        <div class="details-section">
+                            <div class="details-header">
+                                <span>⚠️ Risk Assessment</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <div id="riskLevel"></div>
+                                <p style="color: #9ca3af; font-size: 13px;">
+                                    The overall fairness risk level based on detected violations across all protected attributes.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Executive Summary -->
+                        <div class="details-section">
+                            <div class="details-header">📊 Executive Summary</div>
+                            <div class="detail-value" id="summaryContainer"></div>
+                        </div>
+
+                        <!-- Fairness Metrics -->
+                        <div class="details-section">
+                            <div class="details-header">📈 Fairness Metrics</div>
+                            <div id="metricsContainer"></div>
+                            <div class="metric-explanation">
+                                <strong>📌 Understanding These Metrics:</strong><br>
+                                These percentages represent disparities between protected demographic groups. Higher percentages indicate greater bias. A value > 30% indicates significant fairness concerns requiring intervention.
+                            </div>
+                        </div>
+
+                        <!-- Violations Detected -->
+                        <div class="details-section">
+                            <div class="details-header">🚨 Violations Detected</div>
+                            <div id="violationsContainer"></div>
+                        </div>
+
+                        <!-- Detailed Analysis -->
+                        <div class="details-section">
+                            <div class="details-header">🔍 Detailed Analysis</div>
+                            <div id="detailedAnalysisContainer"></div>
+                        </div>
+
+                        <!-- AI-Powered Insights -->
+                        <div class="details-section">
+                            <div class="details-header">🤖 AI-Powered Insights (Gemini)</div>
+                            <div id="explanationContainer" style="background: rgba(59, 130, 246, 0.05); padding: 16px; border-radius: 8px; margin-top: 12px; border-left: 3px solid #3b82f6; color: #93c5fd; font-size: 14px; line-height: 1.6;"></div>
+                        </div>
+
+                        <!-- Recommendations -->
+                        <div class="details-section">
+                            <div class="details-header">✨ Recommendations</div>
+                            <div id="recommendationsContainer"></div>
+                        </div>
+
+                        <!-- Interactive Visualizations -->
+                        <div class="details-section">
+                            <div class="details-header">📊 Interactive Visualizations</div>
+                            <div class="visualizations-grid" id="visualizationsContainer"></div>
+                        </div>
+
+                        <!-- Export Results -->
+                        <div class="details-section">
+                            <div class="details-header">💾 Export Results</div>
+                            <div class="export-section">
+                                <button onclick="exportPDF()" class="export-button">📄 Download PDF Report</button>
+                                <button onclick="exportCSV()" class="export-button">📊 Export as CSV</button>
+                                <button onclick="exportJSON()" class="export-button">📋 Export as JSON</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <footer>
+                        <p>FairLens © 2026 | Google Hackathon Project</p>
+                        <p style="margin-top: 8px;">Powered by Python, FastAPI, and Google Gemini AI</p>
+                    </footer>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadSection = document.getElementById('uploadSection');
+        const fileInput = document.getElementById('fileInput');
+        const resultsSection = document.getElementById('resultsSection');
+        const loading = document.getElementById('loading');
+        const errorMessage = document.getElementById('errorMessage');
+        const fileName = document.getElementById('fileName');
+        const API_URL = window.location.origin + '/api';
+        
+        // Store last audit data for exports
+        let lastAuditData = null;
+
+        // Drag and drop
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        });
+
+        uploadSection.addEventListener('dragleave', () => {
+            uploadSection.classList.remove('dragover');
+        });
+
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            
+            const file = files[0];
+            if (!file.name.endsWith('.csv')) {
+                showError('Please upload a CSV file');
+                return;
+            }
+
+            fileName.textContent = `File: ${file.name}`;
+            analyzeFile(file);
+        }
+
+        async function analyzeFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            showLoading(true);
+            errorMessage.classList.remove('show');
+
+            try {
+                const response = await fetch(`${API_URL}/audit/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Failed to analyze file: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function loadDemoData() {
+            showLoading(true);
+            errorMessage.classList.remove('show');
+            fileName.textContent = 'File: demo_loans.csv (Demo Dataset)';
+
+            try {
+                const response = await fetch(`${API_URL}/audit/demo`);
+                
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Failed to load demo data: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function displayResults(data) {
+            resultsSection.classList.add('show');
+            
+            // Store for exports
+            lastAuditData = data;
+
+            // Dataset Info
+            const datasetInfo = document.getElementById('datasetInfo');
+            datasetInfo.innerHTML = `
+                <div class="info-box">
+                    <div class="info-box-label">Records Analyzed</div>
+                    <div class="info-box-value">${data.records_analyzed || 0}</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-box-label">Protected Attributes</div>
+                    <div class="info-box-value">${data.attributes_analyzed || 0}</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-box-label">Violations Found</div>
+                    <div class="info-box-value">${data.violations ? data.violations.length : 0}</div>
+                </div>
+            `;
+
+            // Risk Level
+            const riskBadge = document.getElementById('riskLevel');
+            const riskLevel = data.risk_level || 'UNKNOWN';
+            riskBadge.innerHTML = riskLevel;
+            riskBadge.classList.add(riskLevel.toLowerCase());
+
+            // Summary
+            const summaryContainer = document.getElementById('summaryContainer');
+            summaryContainer.innerHTML = `
+                <p>${data.summary || 'Analysis complete. Review metrics and violations below.'}</p>
+            `;
+
+            // Metrics with explanations
+            const metricsContainer = document.getElementById('metricsContainer');
+            metricsContainer.innerHTML = '';
+            
+            const metricDescriptions = {
+                'gender_disparity': 'Approval rate difference between genders',
+                'race_disparity': 'Approval rate difference between racial groups',
+                'age_disparity': 'Approval rate difference between age groups'
+            };
+            
+            if (data.metrics) {
+                for (const [key, value] of Object.entries(data.metrics)) {
+                    const metric = document.createElement('div');
+                    metric.className = 'metric-card';
+                    
+                    let severity = 'success';
+                    if (value > 0.3) {
+                        severity = 'danger';
+                    } else if (value > 0.15) {
+                        severity = 'warning';
+                    }
+                    
+                    metric.classList.add(severity);
+
+                    const description = metricDescriptions[key] || key;
+                    const statusEmoji = value > 0.3 ? '❌' : (value > 0.15 ? '⚠️' : '✅');
+                    
+                    metric.innerHTML = `
+                        <div class="metric-label">${statusEmoji} ${key.replace(/_/g, ' ').toUpperCase()}</div>
+                        <div class="metric-value">${(value * 100).toFixed(1)}%</div>
+                        <div style="color: #666666; font-size: 12px; margin-top: 8px;">${description}</div>
+                    `;
+                    metricsContainer.appendChild(metric);
+                }
+            }
+
+            // Violations with detailed explanations
+            const violationsContainer = document.getElementById('violationsContainer');
+            violationsContainer.innerHTML = '';
+            
+            if (data.violations && data.violations.length > 0) {
+                data.violations.forEach((violation, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'violation-card';
+                    
+                    const severity = violation.severity > 0.3 ? 'Critical' : 'High';
+                    
+                    div.innerHTML = `
+                        <div class="violation-title">🚨 ${violation.attribute} - Metric: ${violation.metric}</div>
+                        <div class="violation-text">
+                            <strong>Severity:</strong> ${severity} (${(violation.severity * 100).toFixed(1)}% disparity)
+                        </div>
+                        <div class="violation-text" style="margin-top: 10px;">
+                            <strong>Details:</strong><br>${violation.explanation}
+                        </div>
+                        <div class="expandable" onclick="toggleDetails(this)">
+                            <span class="expandable-arrow">▶</span> View Impact & Recommendations
+                            <div class="expandable-content">
+                                <p><strong>What this means:</strong></p>
+                                <p>This fairness violation indicates that ${violation.attribute.toLowerCase()} groups are being treated differently by the model. Some groups have significantly higher approval rates than others, suggesting potential bias.</p>
+                                <p style="margin-top: 10px;"><strong>Potential causes:</strong></p>
+                                <ul style="margin-left: 20px; color: #9ca3af;">
+                                    <li>Correlated features that capture protected characteristics</li>
+                                    <li>Imbalanced training data across groups</li>
+                                    <li>Historical bias in the training data</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                    violationsContainer.appendChild(div);
+                });
+            } else {
+                violationsContainer.innerHTML = '<div class="violation-card" style="background: rgba(74, 222, 128, 0.05); border-left-color: #4ade80; border-color: rgba(74, 222, 128, 0.3);"><div class="violation-text" style="color: #86efac;">✅ No major fairness violations detected! Your model appears balanced across protected attributes.</div></div>';
+            }
+
+            // Detailed Analysis
+            const detailedAnalysisContainer = document.getElementById('detailedAnalysisContainer');
+            detailedAnalysisContainer.innerHTML = `
+                <div class="detail-item">
+                    <div class="detail-label">📊 Analysis Type</div>
+                    <div class="detail-value">Demographic Parity & Equalized Odds Assessment</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">🎯 Protection Level</div>
+                    <div class="detail-value">This audit checks for disparities in approval rates across protected attributes. A difference > 15% indicates potential discrimination.</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">📈 Score Interpretation</div>
+                    <div class="detail-value">
+                        <strong style="color: #4ade80;">0-15%:</strong> ✅ Acceptable<br>
+                        <strong style="color: #fbbf24;">15-30%:</strong> ⚠️ Concerning<br>
+                        <strong style="color: #f87171;">30%+:</strong> ❌ Severe
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">🔬 Methods Used</div>
+                    <div class="detail-value">
+                        ✓ Demographic Parity Analysis<br>
+                        ✓ Equalized Odds Testing<br>
+                        ✓ Predictive Parity Checking<br>
+                        ✓ Individual Fairness Assessment
+                    </div>
+                </div>
+            `;
+
+            // Recommendations
+            const recommendationsContainer = document.getElementById('recommendationsContainer');
+            let recommendations = '';
+            
+            if (data.violations && data.violations.length > 0) {
+                recommendations = `
+                    <div class="detail-item" style="background: rgba(251, 191, 36, 0.05); border-left-color: #fbbf24;">
+                        <div class="detail-label" style="color: #fbbf24;">🛠️ Action Items</div>
+                        <div class="detail-value">
+                            <ol style="margin-left: 20px;">
+                                <li><strong>Audit Training Data:</strong> Check if training data has imbalanced representations of protected groups</li>
+                                <li><strong>Review Feature Engineering:</strong> Identify proxy variables that may encode protected characteristics</li>
+                                <li><strong>Implement Fairness Constraints:</strong> Use fairness-aware ML techniques like fairlearn or fairness constraints</li>
+                                <li><strong>Rebalance Dataset:</strong> Ensure adequate representation of minority groups</li>
+                                <li><strong>Monitor in Production:</strong> Track fairness metrics continuously after deployment</li>
+                            </ol>
+                        </div>
+                    </div>
+                `;
+            } else {
+                recommendations = `
+                    <div class="detail-item" style="background: rgba(74, 222, 128, 0.05); border-left-color: #4ade80;">
+                        <div class="detail-label" style="color: #4ade80;">✅ Current Status</div>
+                        <div class="detail-value">
+                            Your model demonstrates fair treatment across protected groups. Continue to:<br>
+                            • Monitor fairness metrics in production<br>
+                            • Regularly audit with new data<br>
+                            • Document fairness testing procedures
+                        </div>
+                    </div>
+                `;
+            }
+            
+            recommendationsContainer.innerHTML = recommendations;
+
+            // Explanation
+            const explanationContainer = document.getElementById('explanationContainer');
+            explanationContainer.innerHTML = data.summary || 'Fairness analysis complete. Review the sections above for detailed insights.';
+            explanationContainer.style.color = '#93c5fd';
+
+            // Load visualizations
+            loadVisualizations(data);
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleDetails(element) {
+            element.classList.toggle('open');
+            element.querySelector('.expandable-content').classList.toggle('show');
+        }
+
+        function showLoading(show) {
+            loading.classList.toggle('show', show);
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+        }
+
+        // Export Functions
+        async function exportPDF() {
+            if (!lastAuditData) {
+                showError('No audit data to export. Run an analysis first.');
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                console.log('📄 Exporting PDF with data:', lastAuditData);
+                
+                const response = await fetch(`${API_URL}/export/pdf`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(lastAuditData)
+                });
+                
+                console.log('PDF Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Server error: ${response.status} - ${errorText}`);
+                }
+                
+                const blob = await response.blob();
+                console.log('PDF Blob created, size:', blob.size);
+                downloadFile(blob, 'FairLens_Report.pdf', 'application/pdf');
+                showError(''); // Clear error
+            } catch (error) {
+                console.error('PDF Export Error:', error);
+                showError('Failed to generate PDF: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function exportCSV() {
+            if (!lastAuditData) {
+                showError('No audit data to export. Run an analysis first.');
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                console.log('📊 Exporting CSV with data:', lastAuditData);
+                
+                const response = await fetch(`${API_URL}/export/csv`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(lastAuditData)
+                });
+                
+                console.log('CSV Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Server error: ${response.status} - ${errorText}`);
+                }
+                
+                const blob = await response.blob();
+                console.log('CSV Blob created, size:', blob.size);
+                downloadFile(blob, 'FairLens_Report.csv', 'text/csv');
+                showError(''); // Clear error
+            } catch (error) {
+                console.error('CSV Export Error:', error);
+                showError('Failed to generate CSV: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function exportJSON() {
+            if (!lastAuditData) {
+                showError('No audit data to export. Run an analysis first.');
+                return;
+            }
+            
+            try {
+                console.log('📋 Exporting JSON with data:', lastAuditData);
+                const json = JSON.stringify(lastAuditData, null, 2);
+                const blob = new Blob([json], {type: 'application/json'});
+                console.log('JSON Blob created, size:', blob.size);
+                downloadFile(blob, 'FairLens_Report.json', 'application/json');
+                showError(''); // Clear error
+            } catch (error) {
+                console.error('JSON Export Error:', error);
+                showError('Failed to export JSON: ' + error.message);
+            }
+        }
+
+        function downloadFile(blob, filename, type) {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        async function loadVisualizations(auditData) {
+            const vizContainer = document.getElementById('visualizationsContainer');
+            
+            try {
+                const response = await fetch(`${API_URL}/visualize`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(auditData)
+                });
+                
+                if (!response.ok) {
+                    console.log('Visualizations unavailable');
+                    vizContainer.innerHTML = '<div style="color: #999; padding: 20px;">Visualizations are being processed...</div>';
+                    return;
+                }
+                
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.charts) {
+                    vizContainer.innerHTML = '';
+                    
+                    // Create chart containers for each visualization
+                    const chartNames = {
+                        'disparity_chart': '📊 Fairness Disparities',
+                        'risk_gauge': '⚠️ Risk Assessment',
+                        'comparison_chart': '📈 Metric Comparison',
+                        'violation_chart': '🚨 Violation Details'
+                    };
+                    
+                    for (const [chartKey, chartJson] of Object.entries(result.charts)) {
+                        const chartDiv = document.createElement('div');
+                        chartDiv.className = 'chart-container';
+                        chartDiv.innerHTML = `<div class="chart-title">${chartNames[chartKey] || chartKey}</div><div id="chart_${chartKey}" style="width: 100%; height: 400px;"></div>`;
+                        vizContainer.appendChild(chartDiv);
+                        
+                        // Parse and render Plotly chart
+                        try {
+                            const chartData = JSON.parse(chartJson);
+                            
+                            // Apply dark theme to chart layout
+                            const darkLayout = {
+                                ...chartData.layout,
+                                paper_bgcolor: '#222222',
+                                plot_bgcolor: '#1a1a1a',
+                                font: { family: 'Inter, sans-serif', color: '#9ca3af' },
+                                xaxis: {
+                                    ...chartData.layout?.xaxis,
+                                    gridcolor: '#2a2a2a',
+                                    linecolor: '#2a2a2a'
+                                },
+                                yaxis: {
+                                    ...chartData.layout?.yaxis,
+                                    gridcolor: '#2a2a2a',
+                                    linecolor: '#2a2a2a'
+                                },
+                                colorscale: {
+                                    sequential: [[0, '#1a1a1a'], [1, '#e8822a']]
+                                }
+                            };
+                            
+                            Plotly.newPlot(`chart_${chartKey}`, chartData.data, darkLayout, {responsive: true});
+                        } catch (e) {
+                            console.log('Chart rendering skipped:', e);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('Visualizations unavailable:', error.message);
+                vizContainer.innerHTML = '<div style="color: #9ca3af; padding: 20px;">Interactive charts are not available in this environment.</div>';
+            }
+        }
+
+        // Load demo data on page load
+        window.addEventListener('load', () => {
+            console.log('Page loaded. Ready for file upload.');
+        });
+    </script>
+</body>
+</html>
