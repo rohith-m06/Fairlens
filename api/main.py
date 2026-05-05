@@ -36,7 +36,32 @@ def load_demo_data():
     global DEMO_DATA_CACHE
     if DEMO_DATA_CACHE is None:
         demo_path = Path(__file__).parent.parent / "data" / "demo_loans.csv"
-        DEMO_DATA_CACHE = pd.read_csv(demo_path)
+        
+        # Try to load from file, if not found, generate in memory
+        if demo_path.exists():
+            DEMO_DATA_CACHE = pd.read_csv(demo_path)
+        else:
+            # Generate demo data in memory for Vercel deployment
+            print("Demo CSV not found, generating data in memory...")
+            np.random.seed(42)
+            n_samples = 1000
+            
+            DEMO_DATA_CACHE = pd.DataFrame({
+                'person_id': range(1, n_samples + 1),
+                'age': np.random.randint(20, 70, n_samples),
+                'gender': np.random.choice(['Male', 'Female'], n_samples),
+                'race': np.random.choice(['White', 'Black', 'Hispanic', 'Asian'], n_samples),
+                'zip_code': np.random.randint(10000, 99999, n_samples),
+                'income': np.random.uniform(20000, 150000, n_samples),
+                'credit_score': np.random.uniform(300, 850, n_samples),
+                'years_employed': np.random.uniform(0, 40, n_samples),
+                'education': np.random.choice(['HS', 'Bachelors', 'Masters', 'PhD'], n_samples),
+                'loan_amount_requested': np.random.uniform(5000, 500000, n_samples),
+                'loan_approved': np.random.choice([0, 1], n_samples, p=[0.7, 0.3]),
+                'model_probability': np.random.uniform(0, 1, n_samples),
+                'model_prediction': np.random.choice([0, 1], n_samples, p=[0.7, 0.3])
+            })
+    
     return DEMO_DATA_CACHE.copy()
 
 
